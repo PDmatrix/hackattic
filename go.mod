@@ -3,9 +3,12 @@ module github.com/pdmatrix/hackattic
 go 1.16
 
 require (
+	github.com/Hallicopter/go-dtmf v0.1.8
+	github.com/anthonynsimon/bild v0.13.0
 	github.com/containerd/containerd v1.5.5 // indirect
 	github.com/docker/docker v20.10.8+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/esimov/pigo v1.4.6
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/gorilla/websocket v1.4.2

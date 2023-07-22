@@ -6,8 +6,11 @@ import (
 	"os"
 
 	"github.com/pdmatrix/hackattic/internal/client"
-	"github.com/pdmatrix/hackattic/pkg/serving_dns"
-	// "github.com/pdmatrix/hackattic/pkg/websocket_chit_chat"
+	"github.com/pdmatrix/hackattic/pkg/visual_basic_math"
+	//"github.com/pdmatrix/hackattic/pkg/touch_tone_dialing"
+	//"github.com/pdmatrix/hackattic/pkg/basic_face_detection"
+	//"github.com/pdmatrix/hackattic/pkg/serving_dns"
+	//"github.com/pdmatrix/hackattic/pkg/websocket_chit_chat"
 	//"github.com/pdmatrix/hackattic/pkg/reading_qr"
 	//"github.com/pdmatrix/hackattic/pkg/brute_force_zip"
 	//"github.com/pdmatrix/hackattic/pkg/dockerized_solutions"
@@ -22,12 +25,12 @@ import (
 
 func main() {
 	c := client.NewHackatticClient(os.Getenv("HACKATTIC_ACCESS_TOKEN"))
-	input, err := c.GetString("serving_dns")
+	input, err := c.GetString("visual_basic_math")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Printf("Input: %s\n", input)
-	output, err := serving_dns.Run(input)
+	output, err := visual_basic_math.Run(input)
 	if err != nil {
 		panic(err)
 	}
@@ -38,7 +41,7 @@ func main() {
 	}
 
 	fmt.Printf("Output: %s\n", string(data))
-	res, err := c.PostSolution("serving_dns", data)
+	res, err := c.PostSolution("visual_basic_math", data)
 	if err != nil {
 		panic(err)
 	}

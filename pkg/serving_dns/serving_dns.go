@@ -3,6 +3,7 @@ package serving_dns
 import (
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
@@ -47,7 +48,6 @@ func delHopHeaders(header http.Header) {
 	}
 }
 
-// 413 with localtunnel :(
 func Run(input string) (*Output, error) {
 	data := new(Data)
 	output := new(Output)
@@ -67,6 +67,13 @@ func Run(input string) (*Output, error) {
 	})
 
 	addr := strings.Replace(listener.Addr().String(), "https://", "", -1)
+	// TODO: ipAddr won't work because localtunnel provide multiple hosts with the same IP
+	ipAddr, err := net.LookupIP(addr)
+	if err != nil {
+		return nil, err
+	}
+	output.DnsIp = ipAddr[0].String()
+	output.DnsPort = "443"
 	fmt.Println(addr)
 
 	return output, nil
