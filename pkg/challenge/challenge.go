@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/pdmatrix/hackattic/internal/client"
+	"github.com/pdmatrix/hackattic/pkg/a_global_presence"
 	"github.com/pdmatrix/hackattic/pkg/backup_restore"
 	"github.com/pdmatrix/hackattic/pkg/basic_face_detection"
 	"github.com/pdmatrix/hackattic/pkg/brute_force_zip"
@@ -29,6 +30,7 @@ type Challenge interface {
 }
 
 var challenges map[string]Challenge = map[string]Challenge{
+	"a_global_presence":    new(a_global_presence.AGlobalPresence),
 	"backup_restore":       new(backup_restore.BackupRestore),
 	"basic_face_detection": new(basic_face_detection.BasicFaceDetection),
 	"brute_force_zip":      new(brute_force_zip.BruteForceZip),
@@ -48,13 +50,17 @@ var challenges map[string]Challenge = map[string]Challenge{
 }
 
 func GetSolution(challenge string, playground bool) (string, error) {
+	solver, ok := challenges[challenge]
+	if !ok {
+		return "", fmt.Errorf("Challenge %s does not exists", challenge)
+	}
 	c := client.NewHackatticClient(os.Getenv("HACKATTIC_ACCESS_TOKEN"))
 	input, err := c.GetString(challenge)
 	if err != nil {
 		return "", err
 	}
 	fmt.Printf("Input: %s\n", input)
-	output, err := challenges[challenge].Solve(input)
+	output, err := solver.Solve(input)
 	if err != nil {
 		return "", err
 	}

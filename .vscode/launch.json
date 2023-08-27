@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "auto",
             "program": "${workspaceFolder}/cmd/hackattic/main.go",
-            "args": ["--challenge", "websocket_chit_chat", "--playground"],
+            "args": ["--challenge", "a_global_presence"],
             "envFile": "${workspaceFolder}/.env"
         }
     ]

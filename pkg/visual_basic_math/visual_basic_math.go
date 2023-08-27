@@ -119,7 +119,7 @@ func recognize() error {
 	ctx := context.Background()
 	ex, err := os.Executable()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	exPath := filepath.Dir(ex)
 	path := filepath.Join(exPath, "..", "..", "pkg", "visual_basic_math", "eng_nums5.traineddata")
