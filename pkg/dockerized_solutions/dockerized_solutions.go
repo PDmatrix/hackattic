@@ -14,6 +14,8 @@ import (
 	"github.com/localtunnel/go-localtunnel"
 )
 
+type DockerizedSolutions struct{}
+
 type Data struct {
 	Credentials struct {
 		User     string `json:"user"`
@@ -53,7 +55,7 @@ func delHopHeaders(header http.Header) {
 }
 
 // 413 with localtunnel :(
-func Run(input string) (*Output, error) {
+func (d DockerizedSolutions) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	output := new(Output)
 	var wg sync.WaitGroup

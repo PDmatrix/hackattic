@@ -1,50 +1,47 @@
 package main
 
 import (
-	"encoding/json"
+	"flag"
 	"fmt"
+	"log"
 	"os"
+	"strings"
+	"time"
 
-	"github.com/pdmatrix/hackattic/internal/client"
-	"github.com/pdmatrix/hackattic/pkg/visual_basic_math"
-	//"github.com/pdmatrix/hackattic/pkg/touch_tone_dialing"
-	//"github.com/pdmatrix/hackattic/pkg/basic_face_detection"
-	//"github.com/pdmatrix/hackattic/pkg/serving_dns"
-	//"github.com/pdmatrix/hackattic/pkg/websocket_chit_chat"
-	//"github.com/pdmatrix/hackattic/pkg/reading_qr"
-	//"github.com/pdmatrix/hackattic/pkg/brute_force_zip"
-	//"github.com/pdmatrix/hackattic/pkg/dockerized_solutions"
-	//"github.com/pdmatrix/hackattic/pkg/backup_restore"
-	//"github.com/pdmatrix/hackattic/pkg/jotting_jwts"
-	//"github.com/pdmatrix/hackattic/pkg/password_hashing"
-	//"github.com/pdmatrix/hackattic/pkg/tales_of_ssl"
-	//"github.com/pdmatrix/hackattic/pkg/collision_course"
-	//"github.com/pdmatrix/hackattic/pkg/help_me_unpack"
-	//"github.com/pdmatrix/hackattic/pkg/mini_miner"
+	"github.com/pdmatrix/hackattic/pkg/challenge"
 )
 
+var challengeName string
+var runUntillPassed bool
+var playground bool
+
+func init() {
+	flag.StringVar(&challengeName, "challenge", "", "Name of the challenge")
+	flag.BoolVar(&runUntillPassed, "run-untill-passed", false, "Run untill passed")
+	flag.BoolVar(&playground, "playground", false, "Use playground mode")
+	flag.Parse()
+}
+
 func main() {
-	c := client.NewHackatticClient(os.Getenv("HACKATTIC_ACCESS_TOKEN"))
-	input, err := c.GetString("visual_basic_math")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("Input: %s\n", input)
-	output, err := visual_basic_math.Run(input)
-	if err != nil {
-		panic(err)
+	if challengeName == "" {
+		log.Fatal("You need to provide challenge name")
 	}
 
-	data, err := json.Marshal(output)
-	if err != nil {
-		panic(err)
-	}
+	for {
+		res, err := challenge.GetSolution(challengeName, playground)
+		if err != nil {
+			fmt.Printf("Error while solving %s challenge: %v", challengeName, err)
+			os.Exit(1)
+		}
 
-	fmt.Printf("Output: %s\n", string(data))
-	res, err := c.PostSolution("visual_basic_math", data)
-	if err != nil {
-		panic(err)
-	}
+		if !runUntillPassed {
+			break
+		}
 
-	fmt.Printf("Result: %s", res)
+		if strings.Contains(res, "passed") {
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+	}
 }

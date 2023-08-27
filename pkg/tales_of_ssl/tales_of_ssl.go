@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+type TalesOfSsl struct{}
+
 type Data struct {
 	PrivateKey   string `json:"private_key"`
 	RequiredData struct {
@@ -27,7 +29,7 @@ type Output struct {
 	Certificate string `json:"certificate"`
 }
 
-func Run(input string) (*Output, error) {
+func (d TalesOfSsl) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	err := json.Unmarshal([]byte(input), &data)
 	if err != nil {

@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+type BruteForceZip struct{}
+
 type Data struct {
 	ZipUrl string `json:"zip_url"`
 }
@@ -19,7 +21,7 @@ type Output struct {
 }
 
 // fcrackzip need to install
-func Run(input string) (*Output, error) {
+func (d BruteForceZip) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	err := json.Unmarshal([]byte(input), &data)
 	if err != nil {

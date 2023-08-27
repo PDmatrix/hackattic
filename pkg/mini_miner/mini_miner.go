@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 )
 
+type MiniMiner struct{}
+
 type Data struct {
 	Difficulty int `json:"difficulty"`
 	Block      struct {
@@ -13,8 +15,13 @@ type Data struct {
 	} `json:"block"`
 }
 
-func Run(input string) (interface{}, error) {
+type Output struct {
+	Nonce int `json:"nonce"`
+}
+
+func (d MiniMiner) Solve(input string) (interface{}, error) {
 	data := new(Data)
+	output := new(Output)
 	err := json.Unmarshal([]byte(input), &data)
 	if err != nil {
 		return nil, err
@@ -34,5 +41,7 @@ func Run(input string) (interface{}, error) {
 		}
 	}
 
-	return data.Block.Nonce, nil
+	output.Nonce = data.Block.Nonce
+
+	return output, nil
 }

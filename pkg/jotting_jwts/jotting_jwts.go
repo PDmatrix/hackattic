@@ -10,6 +10,8 @@ import (
 	"github.com/localtunnel/go-localtunnel"
 )
 
+type JottingJwts struct{}
+
 type Data struct {
 	JwtSecret string `json:"jwt_secret"`
 }
@@ -18,7 +20,7 @@ type Output struct {
 	AppUrl string `json:"app_url"`
 }
 
-func Run(input string) (*Output, error) {
+func (d JottingJwts) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	output := new(Output)
 	err := json.Unmarshal([]byte(input), &data)

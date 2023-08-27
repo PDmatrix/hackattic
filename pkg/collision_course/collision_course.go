@@ -3,7 +3,6 @@ package collision_course
 import (
 	b64 "encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 
@@ -15,6 +14,8 @@ import (
 	"github.com/docker/docker/client"
 )
 
+type CollisionCourse struct{}
+
 type Data struct {
 	Include string `json:"include"`
 }
@@ -23,7 +24,7 @@ type Output struct {
 	Files []string `json:"files"`
 }
 
-func Run(input string) (*Output, error) {
+func (d CollisionCourse) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	output := new(Output)
 	err := json.Unmarshal([]byte(input), &data)
@@ -79,7 +80,7 @@ func Run(input string) (*Output, error) {
 	select {
 	case err := <-errCh:
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 	case <-statusCh:
 	}
@@ -99,8 +100,6 @@ func Run(input string) (*Output, error) {
 	arr = append(arr, b64.StdEncoding.EncodeToString(b))
 
 	output.Files = arr
-
-	fmt.Printf("%+v\n", output)
 
 	return output, nil
 }

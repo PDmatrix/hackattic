@@ -6,16 +6,18 @@ import (
 )
 
 func BenchmarkUnpack(b *testing.B) {
+	hmu := new(HelpMeUnpack)
 	input := `{"bytes": "v3rahFGNDeTEqAAA5T/kQ8RUT6jREUlAQEkR0ahPVMQ="}`
 	for n := 0; n < b.N; n++ {
-		Run(input)
+		hmu.Solve(input)
 	}
 }
 
 func TestUnpack(t *testing.T) {
+	hmu := new(HelpMeUnpack)
 	input := `{"bytes": "v3rahFGNDeTEqAAA5T/kQ8RUT6jREUlAQEkR0ahPVMQ="}`
-	result, err := Run(input)
-	expected := Output{
+	result, err := hmu.Solve(input)
+	expected := &Output{
 		Int:             -2066056513,
 		Uint:            3826093393,
 		Short:           -22332,
@@ -23,7 +25,7 @@ func TestUnpack(t *testing.T) {
 		Double:          50.1392107379302,
 		BigEndianDouble: 50.1392107379302,
 	}
-	if err != nil || !reflect.DeepEqual(*result, expected) {
+	if err != nil || !reflect.DeepEqual(result, expected) {
 		t.Fatalf(`Run("%s") = %+v, expected %+v`, input, result, expected)
 	}
 }

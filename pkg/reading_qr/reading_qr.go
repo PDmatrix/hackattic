@@ -13,6 +13,8 @@ import (
 	"github.com/liyue201/goqr"
 )
 
+type ReadingQr struct{}
+
 type Data struct {
 	ImageUrl string `json:"image_url"`
 }
@@ -21,8 +23,7 @@ type Output struct {
 	Code string `json:"code"`
 }
 
-// fcrackzip need to install
-func Run(input string) (*Output, error) {
+func (d ReadingQr) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	err := json.Unmarshal([]byte(input), &data)
 	if err != nil {

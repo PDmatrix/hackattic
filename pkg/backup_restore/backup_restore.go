@@ -19,6 +19,8 @@ import (
 	"github.com/jackc/pgx/v4"
 )
 
+type BackupRestore struct{}
+
 type Data struct {
 	Dump string `json:"Dump"`
 }
@@ -27,7 +29,7 @@ type Output struct {
 	AliveSsns []string `json:"alive_ssns"`
 }
 
-func Run(input string) (*Output, error) {
+func (d BackupRestore) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	err := json.Unmarshal([]byte(input), &data)
 	if err != nil {
@@ -91,7 +93,7 @@ func Run(input string) (*Output, error) {
 	time.Sleep(time.Second * 2)
 
 	var out bytes.Buffer
-	cmd := exec.Command("/usr/local/bin/psql", "-p", "5432", "-h", "localhost", "-U", "postgres", "-w", "-f", "/tmp/dump.sql")
+	cmd := exec.Command("/usr/bin/psql", "-p", "5432", "-h", "localhost", "-U", "postgres", "-w", "-f", "/tmp/dump.sql")
 	cmd.Env = []string{"PGPASSWORD=password"}
 	cmd.Stderr = &out
 	cmd.Stdout = &out

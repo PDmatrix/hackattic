@@ -11,6 +11,8 @@ import (
 	"github.com/miekg/dns"
 )
 
+type ServingDns struct{}
+
 type Data struct {
 	Records []struct {
 		Name string `json:"name"`
@@ -48,7 +50,7 @@ func delHopHeaders(header http.Header) {
 	}
 }
 
-func Run(input string) (*Output, error) {
+func (d ServingDns) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	output := new(Output)
 	err := json.Unmarshal([]byte(input), &data)

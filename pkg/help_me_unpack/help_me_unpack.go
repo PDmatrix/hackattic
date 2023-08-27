@@ -7,6 +7,8 @@ import (
 	"math"
 )
 
+type HelpMeUnpack struct{}
+
 type Data struct {
 	Bytes string `json:"bytes"`
 }
@@ -20,7 +22,7 @@ type Output struct {
 	BigEndianDouble float64 `json:"big_endian_double"`
 }
 
-func Run(input string) (*Output, error) {
+func (d HelpMeUnpack) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	output := new(Output)
 	err := json.Unmarshal([]byte(input), &data)

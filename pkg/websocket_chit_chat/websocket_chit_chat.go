@@ -12,6 +12,8 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type WebsocketChitChat struct{}
+
 type Data struct {
 	Token string `json:"token"`
 }
@@ -20,7 +22,7 @@ type Output struct {
 	Secret string `json:"secret"`
 }
 
-func Run(input string) (*Output, error) {
+func (d WebsocketChitChat) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	err := json.Unmarshal([]byte(input), &data)
 	if err != nil {
