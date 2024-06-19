@@ -2,16 +2,22 @@ package dockerized_solutions
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"regexp"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/localtunnel/go-localtunnel"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"golang.ngrok.com/ngrok"
+	"golang.ngrok.com/ngrok/config"
 )
 
 type DockerizedSolutions struct{}
@@ -26,7 +32,7 @@ type Data struct {
 }
 
 type Output struct {
-	AppUrl string `json:"app_url"`
+	Secret string `json:"secret"`
 }
 
 var hopHeaders = []string{
@@ -54,20 +60,21 @@ func delHopHeaders(header http.Header) {
 	}
 }
 
-// 413 with localtunnel :(
 func (d DockerizedSolutions) Solve(input string) (interface{}, error) {
 	data := new(Data)
 	output := new(Output)
-	var wg sync.WaitGroup
-	wg.Add(1)
 	err := json.Unmarshal([]byte(input), &data)
 	if err != nil {
 		return nil, err
 	}
 
-	listener, err := localtunnel.Listen(localtunnel.Options{})
+	// To use this, login to ngrok and export NGROK_AUTHTOKEN variable
+	listener, err := ngrok.Listen(context.TODO(),
+		config.HTTPEndpoint(),
+		ngrok.WithAuthtokenFromEnv(),
+	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	server := http.Server{
@@ -75,7 +82,7 @@ func (d DockerizedSolutions) Solve(input string) (interface{}, error) {
 			log.Println(req.Method, " ", req.URL, " ")
 
 			dur, _ := time.ParseDuration("5m")
-			client := &http.Client{
+			proxyClient := &http.Client{
 				Timeout: dur,
 			}
 
@@ -91,14 +98,12 @@ func (d DockerizedSolutions) Solve(input string) (interface{}, error) {
 
 			delHopHeaders(req.Header)
 
-			resp, err := client.Do(req)
+			resp, err := proxyClient.Do(req)
 			if err != nil {
 				http.Error(wr, "Server Error", http.StatusInternalServerError)
 				log.Fatal("ServeHTTP:", err)
 			}
 			defer resp.Body.Close()
-
-			log.Println(req.RemoteAddr, " ", resp.Status)
 
 			delHopHeaders(resp.Header)
 
@@ -115,31 +120,87 @@ func (d DockerizedSolutions) Solve(input string) (interface{}, error) {
 		}),
 	}
 
-	// Handle request from localtunnel
+	// Handle request from ngrok
 	go server.Serve(listener)
 
 	addr := strings.Replace(listener.Addr().String(), "https://", "", -1)
 
-	fmt.Println(addr)
 	req, err := http.NewRequest("POST", fmt.Sprintf("https://hackattic.com/_/push/%s", data.TriggerToken), bytes.NewBuffer([]byte(fmt.Sprintf(`{"registry_host":"%s"}`, addr))))
 	if err != nil {
 		return nil, err
 	}
 	dur, _ := time.ParseDuration("5m")
-	client := &http.Client{
+	httpClient := &http.Client{
 		Timeout: dur,
 	}
-	resp, err := client.Do(req)
+	resp, err := httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	// bodyBytes, err := io.ReadAll(resp.Body)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// bodyString := string(bodyBytes)
-	// fmt.Printf("%v", bodyString)
-	output.AppUrl = listener.Addr().String()
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	bodyString := string(bodyBytes)
+	re, _ := regexp.Compile(`\\"Tag\\":\\".+?\\"`)
+	matches := re.FindStringSubmatch(bodyString)
+	answer := ""
+	for _, match := range matches {
+		re2, _ := regexp.Compile(`\d{0,3}\.\d{0,3}\.\d{0,3}`)
+		tag := re2.FindString(match)
+
+		ctx := context.Background()
+		cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+		if err != nil {
+			panic(err)
+		}
+
+		reader, err := cli.ImagePull(ctx, fmt.Sprintf("localhost:5000/hack:%s", tag), types.ImagePullOptions{})
+		if err != nil {
+			panic(err)
+		}
+		io.Copy(os.Stdout, reader)
+
+		resp, err := cli.ContainerCreate(ctx, &container.Config{
+			Image: fmt.Sprintf("localhost:5000/hack:%s", tag),
+			Tty:   false,
+			Env:   []string{fmt.Sprintf("IGNITION_KEY=%s", data.IgnitionKey)},
+		}, nil, nil, nil, "")
+		if err != nil {
+			return nil, err
+		}
+
+		if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+			return nil, err
+		}
+
+		time.Sleep(time.Second * 2)
+
+		reader, err = cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{
+			ShowStdout: true,
+		})
+		if err != nil {
+			return nil, err
+		}
+		p := make([]byte, 8)
+		reader.Read(p)
+		content, _ := io.ReadAll(reader)
+		l := strings.Trim(string(content), "\n")
+
+		reader.Close()
+		if l != "oops, wrong image!" {
+			answer = l
+		}
+
+		if err := cli.ContainerStop(ctx, resp.ID, nil); err != nil {
+			return nil, err
+		}
+	}
+
+	output.Secret = answer
+
 	return output, nil
 }
